@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Webhooks } from "@octokit/webhooks";
 import { prisma } from "@/server/db/prisma";
 
-const webhooks = new Webhooks({ secret: process.env.GITHUB_WEBHOOK_SECRET || "" });
+
 type PullRequestWebhookPayload = {
   action: string;
   repository: { owner: { login: string }; name: string };
@@ -19,7 +19,7 @@ type PullRequestWebhookPayload = {
 };
 
 export async function POST(req: Request) {
-  const signature = req.headers.get("x-hub-signature-256");
+  const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET;  if (!webhookSecret) {   return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });  }  const webhooks = new Webhooks({ secret: webhookSecret });  const signature = req.headers.get("x-hub-signature-256");
   const id = req.headers.get("x-github-delivery");
   const event = req.headers.get("x-github-event");
   const payload = await req.text();
@@ -82,3 +82,4 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ received: true });
 }
+
